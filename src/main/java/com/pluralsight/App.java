@@ -1,29 +1,35 @@
 package com.pluralsight;
 
 import java.sql.*;
+import java.util.Scanner;
 
 public class App {
     public static void main(String[] args) throws ClassNotFoundException, SQLException {
+        Scanner scanner = new Scanner(System.in);
+
         String url = "jdbc:mysql://localhost:3306/northwind";
         String username = args[0];
         String password = args[1];
 
-        Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(url, username, password);
 
         String query = """
                 select productID, productName, unitPrice, UnitsInStock
                 from products
-                where productName like ? or supplierID like ?;
+                where productName like ?;
                 """;
 
         PreparedStatement statement = connection.prepareStatement(query);
 
-        String productName = "%hi%";
-        int supplierID = 4;
+        System.out.println("What is the product name you are looking for?");
+        String productName = scanner.nextLine().trim();
 
-        statement.setString(1, productName);
-        statement.setInt(2, supplierID);
+//        System.out.println("What is the supplier ID(1-29)");
+//        int supplierID = scanner.nextInt();
+//        scanner.nextLine();
+
+        statement.setString(1, "%" + productName + "%");
+//        statement.setString(2, "%" + supplierID + "%");
         ResultSet results = statement.executeQuery();
 
         while (results.next()) {
