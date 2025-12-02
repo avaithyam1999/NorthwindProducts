@@ -11,44 +11,100 @@ public class App {
         String username = args[0];
         String password = args[1];
 
-        Connection connection = DriverManager.getConnection(url, username, password);
+        displayProductInfoSearch(url, username, password, scanner);
+        displayCustomerInfoSearch(url, username, password, scanner);
+    }
 
+    private static void displayProductInfoSearch(String url, String username, String password, Scanner scanner) throws SQLException {
         String query = """
-                select productID, productName, unitPrice, UnitsInStock
-                from products
-                where productName like ?;
+                SELECT productID, productName, unitPrice, unitsInStock
+                FROM products
+                WHERE productName LIKE ?;
                 """;
 
-        PreparedStatement statement = connection.prepareStatement(query);
+        try (Connection connection = DriverManager.getConnection(url, username, password);
+             PreparedStatement statement = connection.prepareStatement(query)) {
 
-        System.out.println("What is the product name you are looking for?");
-        String productName = scanner.nextLine().trim();
+            System.out.println("What is the product name you are looking for?");
+            String productName = scanner.nextLine().trim();
 
-//        System.out.println("What is the supplier ID(1-29)");
-//        int supplierID = scanner.nextInt();
-//        scanner.nextLine();
+            statement.setString(1, "%" + productName + "%");
 
-        statement.setString(1, "%" + productName + "%");
-//        statement.setString(2, "%" + supplierID + "%");
-        ResultSet results = statement.executeQuery();
+            try (ResultSet results = statement.executeQuery()) {
+                boolean found = false;
 
-        while (results.next()) {
-            String name = results.getString(1);
-            productName = results.getString(2);
-            int unitPrice = results.getInt(3);
-            int unitsInStock = results.getInt(4);
-            System.out.printf("""
-                    
-                    Product ID: %s
-                    Product Name: %s
-                    Unit Price: %d
-                    Units in Stock: %d
-                    
-                    """, name, productName, unitPrice, unitsInStock);
+                while (results.next()) {
+                    found = true;
+                    int productID = results.getInt("productID");
+                    String name = results.getString("productName");
+                    double unitPrice = results.getDouble("unitPrice");
+                    int unitsInStock = results.getInt("unitsInStock");
+
+                    System.out.printf("""
+                            
+                            Product ID: %d
+                            Product Name: %s
+                            Unit Price: $%.2f
+                            Units in Stock: %d
+                            
+                            """, productID, name, unitPrice, unitsInStock);
+                }
+
+                if (!found) {
+                    System.out.println("No products found matching: " + productName);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error retrieving products: " + e.getMessage());
+            e.printStackTrace();
         }
+    }
+    private static void displayCustomerInfoSearch(String url, String username, String password, Scanner scanner) {
+        String query = """
+                SELECT customerID, companyName, contactName, city, country
+                FROM customers
+                WHERE country LIKE ?;
+                """;
 
-        results.close();
-        statement.close();
-        connection.close();
+        try (Connection connection = DriverManager.getConnection(url, username, password);
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            System.out.println("\nWhat country would you like to search for customers in?");
+            String country = scanner.nextLine().trim();
+
+            statement.setString(1, "%" + country + "%");
+
+            try (ResultSet results = statement.executeQuery()) {
+                boolean found = false;
+
+                while (results.next()) {
+                    found = true;
+                    String customerID = results.getString("customerID");
+                    String companyName = results.getString("companyName");
+                    String contactName = results.getString("contactName");
+                    String city = results.getString("city");
+                    String customerCountry = results.getString("country");
+
+                    System.out.printf("""
+                            
+                            Customer ID: %s
+                            Company Name: %s
+                            Contact Name: %s
+                            City: %s
+                            Country: %s
+                            
+                            """, customerID, companyName, contactName, city, customerCountry);
+                }
+
+                if (!found) {
+                    System.out.println("No customers found in: " + country);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error retrieving customers: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
