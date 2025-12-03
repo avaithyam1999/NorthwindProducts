@@ -56,8 +56,7 @@ public class App {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error retrieving products: " + e.getMessage());
-            e.printStackTrace();
+            System.out.println("Error retrieving products: " + e.getMessage());
         }
     }
     private static void displayCustomerInfoSearch(String url, String username, String password, Scanner scanner) {
@@ -103,8 +102,7 @@ public class App {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error retrieving customers: " + e.getMessage());
-            e.printStackTrace();
+            System.out.println("Error retrieving customers: " + e.getMessage());
         }
     }
 }
